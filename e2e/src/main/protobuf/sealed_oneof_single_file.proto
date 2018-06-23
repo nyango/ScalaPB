@@ -9,16 +9,16 @@ option (scalapb.options) = {
   single_file: true
 };
 
-message Lit {
-    int32 value = 1;
-}
-
-message Add {
-    Expr lhs = 1;
-    Expr rhs = 2;
-}
-
 message Expr {
+    message Lit {
+        int32 value = 1;
+    }
+
+    message Add {
+        Expr lhs = 1;
+        Expr rhs = 2;
+    }
+
     oneof sealed_value {
         Lit lit = 1;
         Add add = 2;

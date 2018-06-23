@@ -3,7 +3,8 @@ package scalapb.compiler
 import com.google.protobuf.Descriptors._
 import scala.collection.JavaConverters._
 
-class ProtoValidation(val params: GeneratorParams) extends DescriptorPimps {
+class ProtoValidation(implicits: DescriptorImplicits) {
+  import implicits._
 
   def validateFile(fd: FileDescriptor): Unit = {
     fd.getEnumTypes.asScala.foreach(validateEnum)
@@ -28,6 +29,28 @@ class ProtoValidation(val params: GeneratorParams) extends DescriptorPimps {
     m.getEnumTypes.asScala.foreach(validateEnum)
     m.getNestedTypes.asScala.foreach(validateMessage)
     m.getFields.asScala.foreach(validateField)
+    if (m.isSealedOneofType) {
+      val oneof = m.getOneofs.get(0)
+      if (m.getFields.size() != oneof.getFields.size()) {
+        throw new GeneratorException(s"${m.getFullName}: sealed oneofs must have all their fields inside a single oneof")
+      }
+      val fields = oneof.getFields.asScala
+      fields.find(!_.isMessage).foreach {
+        field =>
+          throw new GeneratorException(
+            s"${m.getFullName}.${field.getName}: sealed oneofs must have all their fields be message types")
+      }
+      fields.find(_.getMessageType.getContainingType != m).foreach {
+        field =>
+          throw new GeneratorException(
+            s"${m.getFullName}.${field.getName}: all sealed oneof cases must be defined inside the container message")
+      }
+      val distinctTypes = fields.map(_.getMessageType).toSet
+      if (distinctTypes.size != fields.size) {
+        throw new GeneratorException(
+          s"${m.getFullName}: all sealed oneof cases must be of a distinct message type")
+      }
+    }
   }
 
   def validateField(fd: FieldDescriptor): Unit = {

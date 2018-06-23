@@ -4,6 +4,7 @@ package com.trueaccord.proto.e2e;
 
 import "sealed_oneof_to_import.proto";
 
+/*
 message Lit {
     int32 value = 1;
 }
@@ -25,8 +26,8 @@ message Programs {
 }
 
 // Negative tests below: assert sealed oneof is not triggered.
-
 message Left { string value = 1; }
+
 message Right { string value = 1; }
 
 message Nested {
@@ -91,3 +92,4 @@ message NonDistinctSealedOneof {
         Add add2 = 2;
     }
 }
+*/
